@@ -1,2 +1,7 @@
+// Ignore vim junk
 *.swp
 *.swo
+// Ignore compiler/linker outputs
+*.bin
+*.elf
+*.o
