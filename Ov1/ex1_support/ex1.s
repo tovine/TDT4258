@@ -82,7 +82,19 @@
 	      .type   _reset, %function
         .thumb_func
 _reset: 
-	      b .  // do nothing
+	//load CMU base address
+	ldr r1, CMU_BASE
+	mov r2, #1				// Load '1' to temp. register r2
+	lsl r2, r2, #CMU_HFPERCLKEN0_GPIO	// Shift '1' to GPIO position
+	str r2, [r1, #CMU_HFPRCLKEN0]		// Write result to control register
+
+	// Set up GPIO - PORT_C[0-7] = SWITCHES, PORT_A[8-15] = LEDS
+	// -> SWITCHES: strong pull-up, input (maybe filter) - MODEn = 0b0010, DOUT = 1
+	// -> LEDS: output mode
+	ldr r1, GPIO_PC_BASE
+	mov r2, #2 // = 0b0010
+	
+
 	
 	/////////////////////////////////////////////////////////////////////////////
 	//
