@@ -9,6 +9,7 @@
 	//
 	/////////////////////////////////////////////////////////////////////////////
 	
+
         .section .vectors
 	
 	      .long   stack_top               /* Top of Stack                 */
@@ -92,7 +93,11 @@ _reset:
 	// -> SWITCHES: strong pull-up, input (maybe filter) - MODEn = 0b0010, DOUT = 1
 	// -> LEDS: output mode
 	ldr r1, GPIO_PC_BASE
-	mov r2, #2 // = 0b0010
+	mov r2, #0x22222222 // = 0b0010
+	str r2, [r1, #GPIO_MODEL]
+	
+	mov r2, #0xFF
+	str r2, [r1, #GPIO_DOUT]
 	
 
 	
