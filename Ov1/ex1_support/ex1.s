@@ -95,12 +95,17 @@ _reset:
 	// Set up GPIO - PORT_C[0-7] = SWITCHES, PORT_A[8-15] = LEDS
 	// -> SWITCHES: strong pull-up, input (maybe filter) - MODEn = 0b0010, DOUT = 1
 	// -> LEDS: output mode
-//	ldr r1,=GPIO_PC_BASE
-//	mov r2, #0x22222222 // = 0b0010
-//	str r2, [r1, #GPIO_MODEL]
+	ldr r1,=GPIO_PC_BASE
+	mov r2, #0x22
+	lsl r3, r2, #8
+	orr r3,r3,r2
+	lsl r4,r3,#16
+	orr r4,r4,r3
+	str r4, [r1, #GPIO_MODEL]
+
 	
-//	mov r2, #0xFF
-//	str r2, [r1, #GPIO_DOUT]
+	mov r2, #0xFF
+	str r2, [r1, #GPIO_DOUT]
 	
 	//LEDS, modeh=0b0100 push pull
 	ldr r1,=GPIO_PA_BASE
@@ -110,7 +115,34 @@ _reset:
 	lsl r4,r3,#16
 	orr r4,r4,r3
 	str r4, [r1, #GPIO_MODEH]
+
+//GPIO interrupts	
 	
+	ldr r1,=GPIO_BASE
+	mov r2, #0x22
+	lsl r3, r2, #8
+	orr r3,r3,r2
+	lsl r4,r3,#16
+	orr r4,r4,r3
+	str r4, [r1, #GPIO_EXTIPSELL]
+
+	mov r2, #0xFF
+	lsl r3, r2, #8
+	orr r3,r3,r2
+
+	str r3, [r1, #GPIO_EXTIFALL]
+	str r3, [r1, #GPIO_EXTIRISE]
+	str r3, [r1, #GPIO_IEN]
+
+	ldr r1, =ISER0
+	mov r2, #0x80
+	lsl r3, r2, #4
+	mov r4, #2
+	orr r3, r3, r4 
+	str r3, [r1, #0]
+
+	b .
+//GPIO interrupts	
 	
 	/////////////////////////////////////////////////////////////////////////////
 	//
@@ -122,13 +154,24 @@ _reset:
         .thumb_func
 gpio_handler:  
 
-//	      b .  // do nothing
 //Set LEDS high
 	ldr r1, =GPIO_PA_BASE
-	mov r2, #0x00  //set pin 15-8 high
+	// Get which pin was pressed
+	ldr r3, =GPIO_BASE
+	ldr r2, [r3, #GPIO_IF]
+	// Clear interrupt flag so it will not trigger again immediately
+	str r2, [r3, #GPIO_IFC]
+
+	mov r4, #0xFF
+	and r4, r2, r4
+	lsl r4, r4, #8
+	// Toggle corresponding LED
+	str r4, [r1, #GPIO_DOUTTGL]
+
+//	mov r2, #0x00  //set pin 15-8 high
 //	lsl r3,r2, #8
 //	orr r3,r3,r2
-	str r2, [r1, #GPIO_DOUT] 	
+//	str r2, [r1, #GPIO_DOUT] 	
 	/////////////////////////////////////////////////////////////////////////////
 	
         .thumb_func
