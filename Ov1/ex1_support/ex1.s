@@ -126,6 +126,8 @@ _reset:
 	movw r2, #0x802
 	str r2, [r1]
 
+//	mov r5, #0	// Variable for use in fancy patterns
+
 //TODO: go to sleep after initializing (see page 100 in Cortex-M3 manual)
 	ldr r1, =SCR
 	mov r2, #6
@@ -145,7 +147,6 @@ main_loop:
 	
         .thumb_func
 gpio_handler: 
-//TODO: go to sleep when returning from interrupt (see page 100 in Cortex-M3 manual) 
 
 	ldr r1, =GPIO_PA_BASE
 	ldr r0, =GPIO_PC_BASE
