@@ -83,8 +83,7 @@ _reset:
 	//Set high drive strength 
 	ldr r1, =GPIO_PA_BASE
 	mov r2, #0x2
-	orr r2,r2,r1
-	str r2, [r1, #0]
+	str r2, [r1, #GPIO_CTRL]
  
 	//load CMU base address
 	ldr r1, =CMU_BASE
@@ -93,55 +92,48 @@ _reset:
 	str r2, [r1, #CMU_HFPERCLKEN0]		// Write result to control register
 
 	// Set up GPIO - PORT_C[0-7] = SWITCHES, PORT_A[8-15] = LEDS
-	// -> SWITCHES: strong pull-up, input (maybe filter) - MODEn = 0b0010, DOUT = 1
+	// -> SWITCHES: strong pull-up, input with filter - MODEn = 0b0011, DOUT = 1
 	// -> LEDS: output mode
 	ldr r1,=GPIO_PC_BASE
-	mov r2, #0x22
-	lsl r3, r2, #8
-	orr r3,r3,r2
-	lsl r4,r3,#16
-	orr r4,r4,r3
-	str r4, [r1, #GPIO_MODEL]
-
+	ldr r2,=0x33333333
+	str r2, [r1, #GPIO_MODEL]
 	
 	mov r2, #0xFF
-	str r2, [r1, #GPIO_DOUT]
+	str r2, [r1, #GPIO_DOUT]	// Pull direction: up
 	
 	//LEDS, modeh=0b0100 push pull
 	ldr r1,=GPIO_PA_BASE
-	mov r2, #0x55
-	lsl r3, r2, #8
-	orr r3,r3,r2
-	lsl r4,r3,#16
-	orr r4,r4,r3
-	str r4, [r1, #GPIO_MODEH]
+	ldr r2,=0x55555555
+	str r2, [r1, #GPIO_MODEH] // Her går alle leds på - PUSHPULLDRIVE, value from DOUT
 
 //GPIO interrupts	
-	
+
+	// Select PORTC for all pin change interrupts	
 	ldr r1,=GPIO_BASE
-	mov r2, #0x22
-	lsl r3, r2, #8
-	orr r3,r3,r2
-	lsl r4,r3,#16
-	orr r4,r4,r3
-	str r4, [r1, #GPIO_EXTIPSELL]
+	ldr r2,=0x22222222
+	str r2, [r1, #GPIO_EXTIPSELL]
 
 	mov r2, #0xFF
-	lsl r3, r2, #8
-	orr r3,r3,r2
 
-	str r3, [r1, #GPIO_EXTIFALL]
-	str r3, [r1, #GPIO_EXTIRISE]
-	str r3, [r1, #GPIO_IEN]
+	// Set interrupts on falling edge for pins 0-7
+	str r2, [r1, #GPIO_EXTIFALL]
+	// Set interrupts on rising edge for pins 0-7
+	str r2, [r1, #GPIO_EXTIRISE]
+	// Enable interrupts for pins 0-7
+	str r2, [r1, #GPIO_IEN]
 
 	ldr r1, =ISER0
-	mov r2, #0x80
-	lsl r3, r2, #4
-	mov r4, #2
-	orr r3, r3, r4 
-	str r3, [r1, #0]
+	movw r2, #0x802
+	str r2, [r1]
 
-	b .
+//TODO: go to sleep after initializing (see page 100 in Cortex-M3 manual)
+	ldr r1, =SCR
+	mov r2, #6
+	str r2, [r1]
+	wfi
+
+main_loop:
+	b main_loop
 //GPIO interrupts	
 	
 	/////////////////////////////////////////////////////////////////////////////
@@ -152,21 +144,24 @@ _reset:
 	/////////////////////////////////////////////////////////////////////////////
 	
         .thumb_func
-gpio_handler:  
+gpio_handler: 
+//TODO: go to sleep when returning from interrupt (see page 100 in Cortex-M3 manual) 
 
-//Set LEDS high
 	ldr r1, =GPIO_PA_BASE
+	ldr r0, =GPIO_PC_BASE
 	// Get which pin was pressed
 	ldr r3, =GPIO_BASE
 	ldr r2, [r3, #GPIO_IF]
 	// Clear interrupt flag so it will not trigger again immediately
 	str r2, [r3, #GPIO_IFC]
 
-	mov r4, #0xFF
-	and r4, r2, r4
+	ldr r4, [r0, #GPIO_DIN]
+//	mov r4, #0xFF
+//	and r4, r2, r4
 	lsl r4, r4, #8
 	// Toggle corresponding LED
-	str r4, [r1, #GPIO_DOUTTGL]
+	str r4, [r1, #GPIO_DOUT]
+	bx lr
 
 //	mov r2, #0x00  //set pin 15-8 high
 //	lsl r3,r2, #8
