@@ -105,7 +105,12 @@ _reset:
 	//LEDS, modeh=0b0100 push pull
 	ldr r1,=GPIO_PA_BASE
 	mov r2, #0x55
-	str r2, [r1, #GPIO_MODEH]
+	lsl r3, r2, #8
+	orr r3,r3,r2
+	lsl r4,r3,#16
+	orr r4,r4,r3
+	str r4, [r1, #GPIO_MODEH]
+	
 	
 	/////////////////////////////////////////////////////////////////////////////
 	//
@@ -120,7 +125,9 @@ gpio_handler:
 //	      b .  // do nothing
 //Set LEDS high
 	ldr r1, =GPIO_PA_BASE
-	mov r2, #0xFF  //set pin 15-8 high
+	mov r2, #0x00  //set pin 15-8 high
+//	lsl r3,r2, #8
+//	orr r3,r3,r2
 	str r2, [r1, #GPIO_DOUT] 	
 	/////////////////////////////////////////////////////////////////////////////
 	
