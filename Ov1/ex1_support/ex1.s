@@ -152,6 +152,7 @@ _reset:
 	str r2, [r1]
 
 	mov r7, #1	// Variable for use in fancy patterns
+	mov r8, #1	// Variable for use in fancy patterns
 
 	//Go to sleep after initializing (see page 100 in Cortex-M3 manual)
 	ldr r1, =SCR
