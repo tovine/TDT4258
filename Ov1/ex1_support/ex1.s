@@ -103,7 +103,7 @@ _reset:
 	ldr r5, =GPIO_PC_BASE
 	ldr r6, =GPIO_BASE
 	
-	//Power down SRAM to conserve energy
+	//Power down SRAM to conserve energy - this didn't work for us, TODO: fjern fra innlevering
 	ldr r0, =EMU_BASE
 	mov r1, #7				// Disable SRAM blocks 1-3
 //	str r1, [r0, #0x4] 			// Write to EMU_MEMCTRL
@@ -130,11 +130,8 @@ _reset:
 	//LEDS, modeh=0b0100 push pull
 	ldr r2,=0x55555555
 	str r2, [r4, #GPIO_MODEH]	// GPIO_PA_MODEH
-					// Her går alle leds på - PUSHPULLDRIVE, value from DOUT
 
-//GPIO interrupts	
-
-	// Select PORTC for all pin change interrupts	
+	// Enable GPIO interrupts, select PORTC for all pin change interrupts	
 	ldr r2,=0x22222222
 	str r2, [r6, #GPIO_EXTIPSELL]
 
@@ -143,7 +140,7 @@ _reset:
 	// Set interrupts on falling edge for pins 0-7
 	str r2, [r6, #GPIO_EXTIFALL]
 	// Set interrupts on rising edge for pins 0-7
-//	str r2, [r6, #GPIO_EXTIRISE]
+//	str r2, [r6, #GPIO_EXTIRISE]	// We only listen for button press events
 	// Enable interrupts for pins 0-7
 	str r2, [r6, #GPIO_IEN]
 
@@ -163,16 +160,17 @@ _reset:
 /*	.thumb_func
 pwm_init:
 	//load CMU base address
-//	ldr r1, =CMU_BASE
+	ldr r1, =CMU_BASE
 	//Set bit #2 high to enable LETIMER0 clock
-//	mov r2, #4
-//	str r2, [r1, #CMU_LFACLKEN0]
+	mov r2, #4
+	str r2, [r1, #CMU_LFACLKEN0]
 	// Bits 11-8 in LFAPRESC0 set the prescaler for LETIMER0
 
 	// LETIMER_CTRL: COMP0TOP=1 (COMP0 is top value), UFOA0=3 (PWM for output 0)
 	// PWM: LETn_O0 is set idle on CNT underflow, and active on compare match with COMP1
 
 	// LETIMER_CMD - used for start/stop timer, see page 594 in efm32GG manual
+*/	
 
 
 	/////////////////////////////////////////////////////////////////////////////
@@ -181,7 +179,6 @@ pwm_init:
 	// The CPU will jump here when there is a GPIO interrupt
 	//
 	/////////////////////////////////////////////////////////////////////////////
-*/	
         .thumb_func
 gpio_handler: 
 
@@ -192,12 +189,11 @@ gpio_handler:
 	ldrb r0, [r5, #GPIO_DIN]
 	// Invert because buttons have "inverted" meaning
 	mvn r0, r0
-//	mov r0, #0xFF
-//	and r0, r2, r0
 
 	b move_dot	// Function in fancy.s
 
-set_leds:	// Return point after modifying LED display register
+// Return point after modifying LED display register
+set_leds:
 	// Left shift because LEDs are on pins 8-15
 	lsl r0, r0, #8
 	// Update LEDs
@@ -205,12 +201,6 @@ set_leds:	// Return point after modifying LED display register
 	
 	// Return from interrupt handler
 	bx lr
-
-//	mov r2, #0x00  //set pin 15-8 high
-//	lsl r3,r2, #8
-//	orr r3,r3,r2
-//	str r2, [r1, #GPIO_DOUT] 	
-
 
 	/////////////////////////////////////////////////////////////////////////////
 	
