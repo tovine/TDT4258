@@ -33,6 +33,8 @@ int main(void)
   /* TODO for higher energy efficiency, sleep while waiting for interrupts
      instead of infinite loop for busy-waiting
   */
+  // Select sleep mode?
+  *SCR = 6 ;
   while(1);
 
   return 0;
@@ -48,6 +50,7 @@ void setupNVIC()
      assignment.
   */
 	*ISER0 |= (1<<1) | (1<<11) | (1<<12); /*enable handling of interrupt TIMER1, GPIO_EVEN and GPIO_ODD*/
+ 	*ISER0 |= 0x802; 
 }
 
 /* if other interrupt handlers are needed, use the following names: 

@@ -26,10 +26,6 @@ void setupGPIO()
   *GPIO_EXTIRISE = 0xFF;
   *GPIO_IEN = 0xFF;  /*Enable interrupts for pins 0-7*/
 
- /* *ISER0 |= 0x802; 
-
-  *SCR = 6 ;
-*/
 }
 
 
