@@ -4,9 +4,10 @@
 #include "efm32gg.h"
 #define CLOCK_FREQUENCY 14000000
 
+#include "timer.h"
+
 /* function to setup the timer */
-void setupTimer(uint16_t period)
-{
+void setupTimer(uint16_t period) {
   /*
     TODO enable and set up the timer
     
