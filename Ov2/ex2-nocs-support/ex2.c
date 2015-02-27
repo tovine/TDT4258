@@ -12,7 +12,7 @@
   registers are 16 bits.
 */
 /* The period between sound samples, in clock cycles */
-#define   SAMPLE_PERIOD   0
+#define   SAMPLE_PERIOD   317	// 14MHz/317 = 44.1kHz
 
 /* Declaration of peripheral setup functions 
 void setupTimer(uint32_t period);
