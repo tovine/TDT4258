@@ -21,11 +21,14 @@ void setupGPIO()
   *GPIO_PC_DOUT = 0xFF; /* pull up direction up*/
 
    /* Set interrupts on falling edge for pins 0-7, set interrupts on rising edge for pins 0-7 */
+  *GPIO_EXTIPSELL = 0x22222222; 
   *GPIO_EXTIFALL = 0xFF;
   *GPIO_EXTIRISE = 0xFF;
   *GPIO_IEN = 0xFF;  /*Enable interrupts for pins 0-7*/
 
-  *ISER0 = 0x802; 
+  *ISER0 |= 0x802; 
+
+  *SCR = 6 ;
 }
 
 

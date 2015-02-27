@@ -2,6 +2,7 @@
 #include <stdbool.h>
 
 #include "efm32gg.h"
+#define CLOCK_FREQUENCY = 14000000
 
 /* function to setup the timer */
 void setupTimer(uint16_t period)
@@ -15,7 +16,13 @@ void setupTimer(uint16_t period)
     4. Start the timer by writing 1 to TIMER1_CMD
     
     This will cause a timer interrupt to be generated every (period) cycles. Remember to configure the NVIC as well, otherwise the interrupt handler will not be invoked.
-  */  
+  */
+	*CMU_HFPERCLKEN0 |= (1<<6);
+	*TIMER1_TOP = CLOCK_FREQUENCY/period;
+	*TIMER1_IEN= 1;
+	*ISER0 |= (1<<12):
+	*TIMER1_CMD= 1;
+  
 }
 
 
