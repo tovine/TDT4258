@@ -2,7 +2,7 @@
 #include <stdbool.h>
 
 #include "efm32gg.h"
-#define CLOCK_FREQUENCY = 14000000
+#define CLOCK_FREQUENCY 14000000
 
 /* function to setup the timer */
 void setupTimer(uint16_t period)
