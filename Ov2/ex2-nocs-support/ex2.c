@@ -1,7 +1,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "efm32gg.h"
+//#include "efm32gg.h"
+
+#include "ex2.h"
 
 /* 
   TODO calculate the appropriate sample period for the sound wave(s) 
@@ -12,11 +14,11 @@
 /* The period between sound samples, in clock cycles */
 #define   SAMPLE_PERIOD   0
 
-/* Declaration of peripheral setup functions */
+/* Declaration of peripheral setup functions 
 void setupTimer(uint32_t period);
 void setupDAC();
 void setupNVIC();
-
+*/
 /* Your code will start executing here */
 int main(void) 
 {  
