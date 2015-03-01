@@ -9,6 +9,6 @@
 
 /* Declaration of peripheral setup functions */
 void setupNVIC();
-
+void setupDMA();
 
 #endif

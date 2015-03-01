@@ -40,6 +40,37 @@ int main(void)
   return 0;
 }
 
+void setupDMA()
+{
+	// Enable DMA controller
+	*DMA_CONFIG = 1;
+	// TODO: set DMA_CTRLBASE to the base address of the control data structure
+	// DMA_CHENS - [11:0] write 1 to enable the corresponding channel
+	// Set [21:16] til 0b001010 (DAC0) og [3:0] til 0b0001
+	*DMA_CH0_CTRL = 0x0A0000;	// Source: DAC0CH0
+	*DMA_CH1_CTRL = 0x0A0001;	// Source: DAC0CH1
+	/* DMA configuration (32-bit word) - refer to page 65 in the EFM32GG manual
+	0b01
+	----
+	Detail:
+	dst_inc		= b01 - halfword (16 bits)
+	dst_size	= b??
+	src_inc		= b01 - halfword (16 bits)
+	src_size	= b01 - halfword
+	dst_prot_ctrl	= b000 - non-privileged
+	src_prot_ctrl	= b000 - non-privileged
+	R_power		= b????
+	n_minus_1	= 
+	next_useburst	= b0 - disable next_useburst?
+	cycle_ctrl	= b011 - ping-pong mode
+	*/
+}
+// DMA_IEN - enable DMA complete interrupt (1 bit per channel)s
+// DMA_IF - interrupt flag settes høye når den korresponderende DMA-kanalen har fullført en overføring
+// DMA_IFS/DMA_IFC - set/clear DMA_IF
+
+
+
 void setupNVIC()
 {
   /* TODO use the NVIC ISERx registers to enable handling of interrupt(s)

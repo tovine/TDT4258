@@ -1,0 +1,51 @@
+<?xml version ="1.0" encoding="iso-8859-1"?>
+
+<workspace>
+  <project>
+    <path>$WS_DIR$\dac_voltage_gecko.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\dac_refresh_gecko.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\dac_sine_generator_gecko.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\signal_generator_gecko_dk.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\dac_wav_player_gecko_dk.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\dac_calibration_gecko.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\dac_voltage_tg.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\dac_refresh_tg.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\dac_sine_generator_tg.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\dac_calibration_tg.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\dac_voltage_gg.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\dac_refresh_gg.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\dac_sine_generator_gg.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\signal_generator_giant_dk.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\dac_calibration_gg.ewp</path>
+  </project>
+
+  <batchBuild/>
+</workspace>
