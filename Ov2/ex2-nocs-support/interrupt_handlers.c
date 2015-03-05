@@ -3,7 +3,7 @@
 
 #include "efm32gg.h"
 #include "interrupt_handlers.h"
-
+#include "sounds.c"
 /* TIMER1 interrupt handler */
 void __attribute__ ((interrupt)) TIMER1_IRQHandler() 
 {  
@@ -11,7 +11,8 @@ void __attribute__ ((interrupt)) TIMER1_IRQHandler()
     TODO feed new samples to the DAC
     remember to clear the pending interrupt by writing 1 to TIMER1_IFC
   */  
-//	*DAC0_CH0DATA;
+	*DAC0_CH0DATA = sinewave[sample];
+	sample++;
 //	*DAC0_CH1DATA;
 	*TIMER1_IFC = 1;
 }
