@@ -25,16 +25,17 @@ int main(void)
   /* Call the peripheral setup functions */
   setupGPIO();
   setupDAC();
+//  setupTimer(254);
   setupTimer(SAMPLE_PERIOD);
   
   /* Enable interrupt handling */
   setupNVIC();
-  
+  startTimer(); 
   /* TODO for higher energy efficiency, sleep while waiting for interrupts
      instead of infinite loop for busy-waiting
   */
-  // Select sleep mode?
-  *SCR = 6 ;
+  // Select sleep mode EM1 - timer does not run when in EM(>=2)
+  *SCR = 2 ;
   while(1);
 
   return 0;
@@ -48,7 +49,7 @@ void setupDMA()
 	// DMA_CHENS - [11:0] write 1 to enable the corresponding channel
 	// Set [21:16] til 0b001010 (DAC0) og [3:0] til 0b0001
 	*DMA_CH0_CTRL = 0x0A0000;	// Source: DAC0CH0
-	*DMA_CH1_CTRL = 0x0A0001;	// Source: DAC0CH1
+//	*DMA_CH1_CTRL = 0x0A0001;	// Source: DAC0CH1
 	/* DMA configuration (32-bit word) - refer to page 65 in the EFM32GG manual
 	0b01
 	----
