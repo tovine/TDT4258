@@ -25,17 +25,18 @@ void __attribute__ ((interrupt)) TIMER1_IRQHandler()
 //	*GPIO_PA_DOUT = (sample << 8);
 	if(curr_sample == NULL){
 		// Sample pointer NULL/invalid - ouput 0
-		*DAC0_CH0DATA = 0;
-		*DAC0_CH1DATA = 0;
-	} else if (*(curr_sample+1) > 0xff) {
+		*DAC0_CH0DATA = DAC_IDLE_VAL;
+		*DAC0_CH1DATA = DAC_IDLE_VAL;
+//	} else if (*curr_sample > 0xff) {
+	} else if (curr_sample >= sound_length -1) {
 		// We're at the end of an audio signal - repeat or stop
 		if(!repeat_sound) curr_sound = NULL;
 		curr_sample = curr_sound;
 	} else {
-		curr_sample++;
-		// Send the next sample to DAC
-		*DAC0_CH0DATA = *curr_sample;
-		*DAC0_CH1DATA = *curr_sample;
+		// Send the samples to DAC
+		*DAC0_CH0DATA = *curr_sound[curr_sample];
+		*DAC0_CH1DATA = *curr_sound[curr_sample+1];
+		curr_sample += 2; // Skip two samples (stereo)
 	}
 	*TIMER1_IFC = 1;
 }

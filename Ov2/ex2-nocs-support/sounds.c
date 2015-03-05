@@ -1,8 +1,7 @@
+#include "sounds/pacman.c"
+
 uint8_t sample = 0;
 
-uint16_t *curr_sound = NULL;
-uint16_t *curr_sample = NULL; // Pointer to current sample
-bool repeat_sound = true;
 
 /* Signal tables */
 const uint16_t sinewave[] = /* 256 values */

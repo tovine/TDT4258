@@ -12,13 +12,28 @@
   registers are 16 bits.
 */
 /* The period between sound samples, in clock cycles */
-#define   SAMPLE_PERIOD   317	// 14MHz/317 = 44.1kHz
+#define SAMPLE_PERIOD   317	// 14MHz/317 = 44.1kHz
+#define	DAC_IDLE_VAL	0x7FF	// Idle output voltage should be 1/2 max
 
 /* Declaration of peripheral setup functions 
 void setupTimer(uint32_t period);
 void setupDAC();
 void setupNVIC();
 */
+
+// Variables used to keep track of the current playing sound
+uint16_t *curr_sound = NULL;
+//uint16_t *curr_sample = NULL; // Pointer to current sample
+bool repeat_sound = true;
+unsigned int sound_length = 0, curr_sample = 0;
+
+void playSound(uint16_t[] &WaveformArray) {
+	sound_length = sizeof(WaveformAray);
+	curr_sound = WaveformAray;
+//	curr_sample = curr_sound;
+	curr_sample = 0;
+}
+
 /* Your code will start executing here */
 int main(void) 
 {  
@@ -30,7 +45,8 @@ int main(void)
   
   /* Enable interrupt handling */
   setupNVIC();
-  startTimer(); 
+  startTimer();
+  playSound(pacman); 
   /* TODO for higher energy efficiency, sleep while waiting for interrupts
      instead of infinite loop for busy-waiting
   */
