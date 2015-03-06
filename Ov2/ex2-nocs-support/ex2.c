@@ -1,8 +1,3 @@
-#include <stdint.h>
-#include <stdbool.h>
-
-//#include "efm32gg.h"
-
 #include "ex2.h"
 
 /* 
@@ -11,9 +6,6 @@
   from) runs at 14 MHz by default. Also remember that the timer counter
   registers are 16 bits.
 */
-/* The period between sound samples, in clock cycles */
-#define SAMPLE_PERIOD   317	// 14MHz/317 = 44.1kHz
-#define	DAC_IDLE_VAL	0x7FF	// Idle output voltage should be 1/2 max
 
 /* Declaration of peripheral setup functions 
 void setupTimer(uint32_t period);
@@ -21,17 +13,49 @@ void setupDAC();
 void setupNVIC();
 */
 
+// Includes the different sounds
+#include "sounds.h"
+
 // Variables used to keep track of the current playing sound
 uint16_t *curr_sound = NULL;
 //uint16_t *curr_sample = NULL; // Pointer to current sample
-bool repeat_sound = true;
+bool repeat_sound = false;
 unsigned int sound_length = 0, curr_sample = 0;
 
-void playSound(uint16_t[] &WaveformArray) {
-	sound_length = sizeof(WaveformAray);
-	curr_sound = WaveformAray;
+void playSound(uint16_t *WaveformArray) {
+	sound_length = WaveformArray[0];
+	*GPIO_PA_DOUTSET = 0xFFFF;
+	*GPIO_PA_DOUTCLR = (sound_length << 8);
+	curr_sound = &WaveformArray[1];
 //	curr_sample = curr_sound;
 	curr_sample = 0;
+}
+
+void handleKeypress(void) {
+	// Get which keys were pressed - inverted because switches are active-low
+	uint8_t keys = ~*GPIO_PC_DIN;
+	switch(keys) {
+	case 0b00000001:
+//		break;
+	case 0b00000010:
+//		break;
+	case 0b00000100:
+//		break;
+	case 0b00001000:
+		playSound(fireball);
+		break;
+	case 0b00010000:
+//		break;
+	case 0b00100000:
+//		break;
+	case 0b01000000:
+//		break;
+	case 0b10000000:
+		playSound(coin);
+		break;
+	default:
+		break;
+	}	
 }
 
 /* Your code will start executing here */
@@ -46,7 +70,7 @@ int main(void)
   /* Enable interrupt handling */
   setupNVIC();
   startTimer();
-  playSound(pacman); 
+  playSound(fireball); 
   /* TODO for higher energy efficiency, sleep while waiting for interrupts
      instead of infinite loop for busy-waiting
   */
