@@ -12,6 +12,7 @@ void setupTimer(uint16_t period) {
 	*TIMER1_IEN= 1;
 }
 
+/* Function to setup RTC - didn't work, but included for later */
 void setupTimerLE(void) {
 	*CMU_HFCORECLKEN0 |= (1 << 4); // Enable Low Energy Peripheral Clock
 	*RTC_CTRL = 5;	// Enable RTC and set it to get TOP value from COMP0

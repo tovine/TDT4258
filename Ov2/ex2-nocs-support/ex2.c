@@ -1,35 +1,18 @@
 #include "ex2.h"
 
-/* 
-  TODO calculate the appropriate sample period for the sound wave(s) 
-  you want to generate. The core clock (which the timer clock is derived
-  from) runs at 14 MHz by default. Also remember that the timer counter
-  registers are 16 bits.
-*/
-
-/* Declaration of peripheral setup functions 
-void setupTimer(uint32_t period);
-void setupDAC();
-void setupNVIC();
-*/
-
 // Includes the different sounds
 #include "sounds.h"
 
 // Variables used to keep track of the current playing sound
 uint16_t *curr_sound = NULL;
-bool repeat_sound = false; // An option to continuously play the same sound
 unsigned int sound_length = 0, curr_sample = 0;
 
 void playSound(uint16_t *WaveformArray) {
 	// Timer will not run if the MCU is in a deeper sleep state than EM1
-	*SCR = 2; //TODO: not yet debugged!
+	*SCR = 2;
 	sound_length = WaveformArray[0];
-//	*GPIO_PA_DOUTSET = 0xFFFF;
-//	*GPIO_PA_DOUTCLR = (sound_length << 8);
 	curr_sound = &WaveformArray[1];
-//	curr_sample = curr_sound;
-	curr_sample = 0;
+	curr_sample = 0; // Offset from sound base address
 }
 
 void handleKeypress(void) {
@@ -41,11 +24,11 @@ void handleKeypress(void) {
 	case 0b00000001:
 		playSound(shoot);
 		break;
-	case 0b01000000:
 	case 0b00000010:
+	case 0b00100000:
 		playSound(pacman_eat);
 		break;
-	case 0b00100000:
+	case 0b01000000:
 	case 0b00000100:
 		playSound(fireball);
 		break;
@@ -54,8 +37,6 @@ void handleKeypress(void) {
 		playSound(coin);
 		break;
 	default:
-		// Send the MCU to deep sleep mode when no sounds are playing
-//		*SCR = 6; //TODO: not yet debugged!
 		break;
 	}	
 }
@@ -109,7 +90,7 @@ void setupDMA()
 	*/
 }
 // DMA_IEN - enable DMA complete interrupt (1 bit per channel)s
-// DMA_IF - interrupt flag settes høye når den korresponderende DMA-kanalen har fullført en overføring
+// DMA_IF - interrupt flag is set high when the corresponding DMA channel has completed a transfer
 // DMA_IFS/DMA_IFC - set/clear DMA_IF
 
 
