@@ -18,11 +18,12 @@ void setupNVIC();
 
 // Variables used to keep track of the current playing sound
 uint16_t *curr_sound = NULL;
-//uint16_t *curr_sample = NULL; // Pointer to current sample
-bool repeat_sound = false;
+bool repeat_sound = false; // An option to continuously play the same sound
 unsigned int sound_length = 0, curr_sample = 0;
 
 void playSound(uint16_t *WaveformArray) {
+	// Timer will not run if the MCU is in a deeper sleep state than EM1
+	*SCR = 2; //TODO: not yet debugged!
 	sound_length = WaveformArray[0];
 //	*GPIO_PA_DOUTSET = 0xFFFF;
 //	*GPIO_PA_DOUTCLR = (sound_length << 8);
@@ -36,11 +37,14 @@ void handleKeypress(void) {
 	uint8_t keys = ~*GPIO_PC_DIN;
 	switch(keys) {
 	case 0b00000001:
-//		break;
+		playSound(shoot);
+		break;
 	case 0b00000010:
-//		break;
+		playSound(pacman_eat);
+		break;
 	case 0b00000100:
-//		break;
+		playSound(pacman_death);
+		break;
 	case 0b00001000:
 		playSound(fireball);
 		break;
@@ -54,6 +58,8 @@ void handleKeypress(void) {
 		playSound(coin);
 		break;
 	default:
+		// Send the MCU to deep sleep mode when no sounds are playing
+//		*SCR = 6; //TODO: not yet debugged!
 		break;
 	}	
 }
@@ -64,9 +70,8 @@ int main(void)
   /* Call the peripheral setup functions */
   setupGPIO();
   setupDAC();
-//  setupTimer(254);
   setupTimer(SAMPLE_PERIOD);
-  setupTimerLE();  
+//  setupTimerLE();  
 
   /* Enable interrupt handling */
   setupNVIC();
@@ -115,18 +120,8 @@ void setupDMA()
 
 void setupNVIC()
 {
-  /* TODO use the NVIC ISERx registers to enable handling of interrupt(s)
-     remember two things are necessary for interrupt handling:
-      - the peripheral must generate an interrupt signal
-      - the NVIC must be configured to make the CPU handle the signal
-     You will need TIMER1, GPIO odd and GPIO even interrupt handling for this
-     assignment.
-  */
-	*ISER0 |= (1<<1) | (1<<11) | (1<<12); /*enable handling of interrupt TIMER1, GPIO_EVEN and GPIO_ODD*/
-//	*ISER0 |= 0x802; 
-//	NVIC_EnableIRQ(ISR_TIMER1);
-//	NVIC_EnableIRQ(ISR_GPIO_EVEN);
-//	NVIC_EnableIRQ(ISR_GPIO_ODD);
+	// For an overview of the different IRQ lines, see table 4.1 (page 13) of the EFM32GG reference manual
+	*ISER0 |= (1<<1) | (1<<11) | (1<<12) | (1 << 30); /*enable handling of interrupt GPIO_EVEN, TIMER1, GPIO_ODD and RTC*/
 }
 
 /* if other interrupt handlers are needed, use the following names: 

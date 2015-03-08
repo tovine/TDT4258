@@ -1,0 +1,25 @@
+Flash memory requirement estimate for sounds:
+=============================================
+
+==> coin.c <==
+const uint16_t coin[] = {
+40000, // First element contains the number of samples
+
+==> fireball.c <==
+const uint16_t fireball[] = {
+4001, // First element contains the size (number of samples)
+
+==> pacman_death.c <==
+const uint16_t pacman_death[] = {
+67664, // First element is length (N samples)
+
+==> pacman_eat.c <==
+const uint16_t pacman_eat[] = {
+19380, // Sound length
+
+==> shoot.c <==
+const uint16_t shoot[] = {
+16320, // N Samples
+
+-----
+Estimated total size when compiled: 287,83 KB (based on 16 bit per sample, times the total number of samples)
