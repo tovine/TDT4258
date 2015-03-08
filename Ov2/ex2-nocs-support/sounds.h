@@ -7,6 +7,7 @@
 //#include "sounds/pacman_death.c"
 #include "sounds/shoot.c"
 #include "sounds/pacman_eat.c"
+#include "sounds/pacman_intro.c"
 //#include "sounds/pacman.c"
 
 #endif

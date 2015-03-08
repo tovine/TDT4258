@@ -22,8 +22,6 @@ void setupDMA();
 void handleKeypress(void);
 
 extern uint16_t *curr_sound;
-//uint16_t *curr_sample = NULL; // Pointer to current sample
-extern bool repeat_sound;
 extern unsigned int sound_length, curr_sample;
 
 #endif

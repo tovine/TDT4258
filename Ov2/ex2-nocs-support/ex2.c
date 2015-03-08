@@ -7,10 +7,11 @@
 uint16_t *curr_sound = NULL;
 unsigned int sound_length = 0, curr_sample = 0;
 
-void playSound(uint16_t *WaveformArray) {
+void playSound(uint16_t *WaveformArray, unsigned int length) {
 	// Timer will not run if the MCU is in a deeper sleep state than EM1
 	*SCR = 2;
-	sound_length = WaveformArray[0];
+//	sound_length = WaveformArray[0];
+	sound_length = length;
 	curr_sound = &WaveformArray[1];
 	curr_sample = 0; // Offset from sound base address
 }
@@ -22,19 +23,19 @@ void handleKeypress(void) {
 	switch(keys) {
 	case 0b00010000:
 	case 0b00000001:
-		playSound(shoot);
+		playSound(shoot, shoot[0]);
 		break;
 	case 0b00000010:
 	case 0b00100000:
-		playSound(pacman_eat);
+		playSound(pacman_eat, pacman_eat[0]);
 		break;
 	case 0b01000000:
 	case 0b00000100:
-		playSound(fireball);
+		playSound(fireball, fireball[0]);
 		break;
 	case 0b00001000:
 	case 0b10000000:
-		playSound(coin);
+		playSound(coin, coin[0]);
 		break;
 	default:
 		break;
@@ -53,10 +54,7 @@ int main(void)
   /* Enable interrupt handling */
   setupNVIC();
   startTimer();
-  playSound(fireball); 
-  /* TODO for higher energy efficiency, sleep while waiting for interrupts
-     instead of infinite loop for busy-waiting
-  */
+  playSound(pacman_intro, 185960); // WORKAROUND: Length of sound is over the limit for 16 bit integer 
   // Select sleep mode EM1 - timer does not run when in EM(>=2)
   *SCR = 2 ;
   while(1);
