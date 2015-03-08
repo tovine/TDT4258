@@ -35,25 +35,21 @@ void playSound(uint16_t *WaveformArray) {
 void handleKeypress(void) {
 	// Get which keys were pressed - inverted because switches are active-low
 	uint8_t keys = ~*GPIO_PC_DIN;
+	*GPIO_PA_DOUT= (*GPIO_PC_DIN << 8 );
 	switch(keys) {
+	case 0b00010000:
 	case 0b00000001:
 		playSound(shoot);
 		break;
+	case 0b01000000:
 	case 0b00000010:
 		playSound(pacman_eat);
 		break;
+	case 0b00100000:
 	case 0b00000100:
-		playSound(pacman_death);
-		break;
-	case 0b00001000:
 		playSound(fireball);
 		break;
-	case 0b00010000:
-//		break;
-	case 0b00100000:
-//		break;
-	case 0b01000000:
-//		break;
+	case 0b00001000:
 	case 0b10000000:
 		playSound(coin);
 		break;
