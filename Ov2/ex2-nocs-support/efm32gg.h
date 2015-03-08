@@ -52,6 +52,7 @@
 #define CMU_HFCORECLKEN0 ((volatile uint32_t*)(CMU_BASE2 + 0x040))
 #define CMU_HFPERCLKEN0  ((volatile uint32_t*)(CMU_BASE2 + 0x044))
 #define CMU_CMD          ((volatile uint32_t*)(CMU_BASE2 + 0x024))
+#define CMU_LFACLKEN0    ((volatile uint32_t*)(CMU_BASE2 + 0x058))
 
 #define CMU2_HFPERCLKEN0_DAC0   (1 << 17)
 #define CMU2_HFPERCLKEN0_PRS    (1 << 15)
@@ -59,6 +60,15 @@
 #define CMU2_HFPERCLKEN0_TIMER1 (1 << 6)
 
 #define CMU_HFCORECLKEN0_DMA (1 << 0)
+
+// RTC - We're going LOW POWER, guys!
+#define RTC_BASE 0x40080000
+
+#define RTC_CTRL  ((volatile uint32_t*)(RTC_BASE + 0x000))
+#define RTC_COMP0 ((volatile uint32_t*)(RTC_BASE + 0x008))
+#define RTC_IFS ((volatile uint32_t*)(RTC_BASE + 0x014))
+#define RTC_IFC ((volatile uint32_t*)(RTC_BASE + 0x018))
+#define RTC_IEN ((volatile uint32_t*)(RTC_BASE + 0x01c))
 
 // TIMER1
 

@@ -9,7 +9,8 @@
 
 /* TIMER1 interrupt handler */
 
-void __attribute__ ((interrupt)) TIMER1_IRQHandler() 
+void __attribute__ ((interrupt)) TIMER1_IRQHandler()
+//void __attribute__ ((interrupt)) RTC_IRQHandler() 
 {  
   /*
     TODO feed new samples to the DAC
@@ -45,6 +46,7 @@ void __attribute__ ((interrupt)) TIMER1_IRQHandler()
 		curr_sample++;
 	}
 	*TIMER1_IFC = 1;
+	*RTC_IFC = 1;
 }
 
 /* GPIO even pin interrupt handler */

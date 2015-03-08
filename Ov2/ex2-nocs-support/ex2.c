@@ -24,8 +24,8 @@ unsigned int sound_length = 0, curr_sample = 0;
 
 void playSound(uint16_t *WaveformArray) {
 	sound_length = WaveformArray[0];
-	*GPIO_PA_DOUTSET = 0xFFFF;
-	*GPIO_PA_DOUTCLR = (sound_length << 8);
+//	*GPIO_PA_DOUTSET = 0xFFFF;
+//	*GPIO_PA_DOUTCLR = (sound_length << 8);
 	curr_sound = &WaveformArray[1];
 //	curr_sample = curr_sound;
 	curr_sample = 0;
@@ -66,7 +66,8 @@ int main(void)
   setupDAC();
 //  setupTimer(254);
   setupTimer(SAMPLE_PERIOD);
-  
+  setupTimerLE();  
+
   /* Enable interrupt handling */
   setupNVIC();
   startTimer();
@@ -122,7 +123,10 @@ void setupNVIC()
      assignment.
   */
 	*ISER0 |= (1<<1) | (1<<11) | (1<<12); /*enable handling of interrupt TIMER1, GPIO_EVEN and GPIO_ODD*/
- 	*ISER0 |= 0x802; 
+//	*ISER0 |= 0x802; 
+//	NVIC_EnableIRQ(ISR_TIMER1);
+//	NVIC_EnableIRQ(ISR_GPIO_EVEN);
+//	NVIC_EnableIRQ(ISR_GPIO_ODD);
 }
 
 /* if other interrupt handlers are needed, use the following names: 
