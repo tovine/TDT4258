@@ -5,7 +5,6 @@
 #include "ex2.h"
 #include "efm32gg.h"
 #include "interrupt_handlers.h"
-//#include "sounds.c"
 
 /* TIMER1 interrupt handler */
 

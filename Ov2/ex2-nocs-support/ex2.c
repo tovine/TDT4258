@@ -64,7 +64,7 @@ int main(void)
 
 void setupDMA()
 {
-	// Enable DMA controller
+	// Enable DMA controller - This isn't implemented yet, but it is included for future use
 	*DMA_CONFIG = 1;
 	// TODO: set DMA_CTRLBASE to the base address of the control data structure
 	// DMA_CHENS - [11:0] write 1 to enable the corresponding channel
