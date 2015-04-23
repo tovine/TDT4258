@@ -99,7 +99,7 @@ static int __init template_init(void)
 		case -1:
 			goto fail_gpio_alloc_1;
 		case -2:
-			goto fail_gpio_alloc_2;
+			goto fail_gpio_alloc_1;
 		default:
 			printk(KERN_INFO "GPIO allocation OK");
 	}
