@@ -8,28 +8,37 @@
 #include <linux/fs.h>
 #include <linux/cdev.h>
 #include <linux/device.h>
+#include <linux/interrupt.h>
 //#include <linux/sched.h>?
 
 #include <stdbool.h>
 
 #include "efm32gg.h"
 
-#define CLASS_NAME "TDT4258_inputdev"
+#define CLASS_NAME	"TDT4258_inputdev"
+#define PA_ALLOW_MASK	0x70 // 0b01110000 - used to mask out the LED pins on PORT_A we can actually use
+#define IRQ_GPIO_EVEN	17
+#define IRQ_GPIO_ODD	18
 
 dev_t DEV_ID;
 struct cdev my_cdev;
 struct class *cl;
 char DEV_NAME[] = "gamepad";
+struct fasync_struct* async;
 
 /* function to set up GPIO mode and interrupts*/
-int setupGPIO()
+int setupGPIO(void)
 {
 	// Request access to the required memory regions
 	if(request_mem_region(GPIO_PA_BASE, 0x01C, DEV_NAME) == NULL)
 		return -2; // error
 	if(request_mem_region(GPIO_PC_BASE, 0x068, DEV_NAME) == NULL)
 		return -1; // error
-	
+
+	// TODO: rewrite using system calls - using pointers directly is bad (apparently)...
+	// Use void *ioremap_nocache(unsigned long phys_addr, unsigned long size); - from <asm/io.h>
+	// And void iounmap(void * addr);
+	// For read/write: unsigned int ioread8(void *addr); and void iowrite8(u8 value, void *addr); - 8 can be replaced by 16 and 32 for different bit widths
 //  *CMU_HFPERCLKEN0 |= CMU2_HFPERCLKEN0_GPIO; /* enable GPIO clock*/ - Not needed as the kernel does this
 	*GPIO_PA_CTRL = 2;  /* set high drive strength */
 	*GPIO_PA_MODEH |= 0x05550000; /* set pins A12-14 as output, rest should not be touched (registers are 0 by default, so OR-equals will work) */
@@ -44,6 +53,16 @@ int setupGPIO()
 	*GPIO_IEN = 0xFF;  /*Enable interrupts for pins 0-7*/
 	return 0;
 }
+
+static irq_handler_t button_handler(int irq, void *dev_id, struct pt_regs *regs) {
+	uint8_t keys = ~*GPIO_PC_DIN;
+	if(async) {
+		//TODO: implement asynchronous notification
+	}
+	printk(KERN_INFO "Value of keys pressed %d", keys);
+	return (irq_handler_t) IRQ_HANDLED;
+}
+
 /*
  * template_init - function to insert this module into kernel space
  *
@@ -57,6 +76,7 @@ int setupGPIO()
 static int my_open(struct inode *inode, struct file *filp) {
 	nonseekable_open(inode, filp); // Device is not seekable
 	//TODO
+	printk(KERN_INFO "Device file opened");
 	return 0;
 }
 /* user program closes the driver */
@@ -67,11 +87,19 @@ static int my_release(struct inode *inode, struct file *filp) {
 /* user program reads from the driver */
 static ssize_t my_read(struct file *filp, char __user *buff, size_t count, loff_t *offp) {
 	//TODO - this should return status of buttons
+	uint8_t keys = ~*GPIO_PC_DIN;
+	printk(KERN_INFO "Status of buttons: %d", keys);
+	put_user((char) keys, buff); // TODO: include header files
 	return 0;
 }
 /* user program writes to the driver */
 static ssize_t my_write(struct file *filp, const char __user *buff, size_t count, loff_t *offp) {
 	//TODO - this should light the LEDs
+	printk(KERN_INFO "Received data: %s", buff);
+	char *data;
+	copy_from_user(data, buff); //TODO: include header files
+	*GPIO_PA_DOUT &= ~(PA_ALLOW_MASK);
+	*GPIO_PA_DOUT |= (PA_ALLOW_MASK & data);
 	return 0;
 }
 
@@ -95,6 +123,11 @@ static int __init template_init(void)
 	cl = class_create(THIS_MODULE, CLASS_NAME);
 	device_create(cl, NULL, DEV_ID, NULL, CLASS_NAME);
 
+	// Register IRQ handlers - use the same function as we don't differentiate between even and odd buttons
+	if(request_irq(IRQ_GPIO_ODD, button_handler, 0, DEV_NAME, NULL) != 0) goto fail_requestIRQ1;
+	if(request_irq(IRQ_GPIO_EVEN, button_handler, 0, DEV_NAME, NULL) != 0) goto fail_requestIRQ2;
+
+	//TODO:do this better (error handling sequence)
 	switch (setupGPIO()) { // < 0 means error, cleanup and exit
 		case -1:
 			goto fail_gpio_alloc_1;
@@ -112,8 +145,11 @@ static int __init template_init(void)
 		release_mem_region(GPIO_PC_BASE, 0x068);
 	fail_gpio_alloc_1:
 		release_mem_region(GPIO_PA_BASE, 0x01C);
-	
 		printk(KERN_ERR "Failed to request GPIO memory space");
+		free_irq(IRQ_GPIO_EVEN, NULL);	
+	fail_requestIRQ2:
+		free_irq(IRQ_GPIO_ODD, NULL);	
+	fail_requestIRQ1:
 	fail_cdev:
 		cdev_del(&my_cdev);
 		unregister_chrdev_region(DEV_ID, 1);
