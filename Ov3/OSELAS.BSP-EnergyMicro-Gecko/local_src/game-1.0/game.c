@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 	display.dy = 0;
 	display.width = SCR_WIDTH;
 	display.height = SCR_HEIGHT;
-	fbfd = open("/dev/fb0", O_RDWR); // TODO: sjekk etter feil og vis feilmelding/avslutt
+	fbfd = open("/dev/fb0", O_RDWR);
 	if(fbfd == -1) {
 		// Failed to open file descriptor
 		printf("Error: unable to open framebuffer, exiting...)");
