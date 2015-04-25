@@ -10,6 +10,7 @@
 #include <linux/device.h>
 #include <linux/interrupt.h>
 //#include <linux/sched.h>?
+#include <asm/uaccess.h>
 
 #include <stdbool.h>
 
@@ -25,6 +26,7 @@ struct cdev my_cdev;
 struct class *cl;
 char DEV_NAME[] = "gamepad";
 struct fasync_struct* async;
+char buttoncache = NULL;
 
 /* function to set up GPIO mode and interrupts*/
 int setupGPIO(void)
@@ -55,9 +57,14 @@ int setupGPIO(void)
 }
 
 static irq_handler_t button_handler(int irq, void *dev_id, struct pt_regs *regs) {
+	// Clear interrupt flags, so they don't fire again
+	*GPIO_IFC= 0xff;
+
 	uint8_t keys = ~*GPIO_PC_DIN;
 	if(async) {
 		//TODO: implement asynchronous notification
+		buttoncache = ~*GPIO_PC_DIN;		// Cache the current button state
+		kill_fasync(async, SIGIO, POLL_IN);	// Notify the other applications that something happened
 	}
 	printk(KERN_INFO "Value of keys pressed %d", keys);
 	return (irq_handler_t) IRQ_HANDLED;
@@ -84,12 +91,21 @@ static int my_release(struct inode *inode, struct file *filp) {
 	//TODO
 	return 0;
 }
+/* Asynchronous file operations */
+static int fasync(int inode_num, struct file *filp, int mode) {
+	return fasync_helper(inode_num, filp, mode, &async);
+}
 /* user program reads from the driver */
 static ssize_t my_read(struct file *filp, char __user *buff, size_t count, loff_t *offp) {
-	//TODO - this should return status of buttons
+	unsigned int bytes_read = 0;
+
 	uint8_t keys = ~*GPIO_PC_DIN;
+	if(buttoncache != NULL) { // Button read after interrupt should be buffered
+		keys = buttoncache;
+		buttoncache = NULL;
+	}
 	printk(KERN_INFO "Status of buttons: %d", keys);
-	put_user((char) keys, buff); // TODO: include header files
+	put_user((char) keys, buff);
 	return 0;
 }
 /* user program writes to the driver */
@@ -97,9 +113,35 @@ static ssize_t my_write(struct file *filp, const char __user *buff, size_t count
 	//TODO - this should light the LEDs
 	printk(KERN_INFO "Received data: %s", buff);
 	char *data;
-	copy_from_user(data, buff); //TODO: include header files
-	*GPIO_PA_DOUT &= ~(PA_ALLOW_MASK);
-	*GPIO_PA_DOUT |= (PA_ALLOW_MASK & data);
+	copy_from_user(data, buff);
+	uint8_t leds = 0;
+	switch(data[0]){
+		case '1':
+			leds = 0b00010000;
+			break;
+		case '2':
+			leds = 0b00100000;
+			break;
+		case '3':
+			leds = 0b00110000;
+			break;
+		case '4':
+			leds = 0b01000000;
+			break;
+		case '5':
+			leds = 0b01010000;
+			break;
+		case '6':
+			leds = 0b01100000;
+			break;
+		case '7':
+			leds = 0b01110000;
+			break;
+		default:
+			printk(KERN_INFO "Invalid input, supported range: 0-7");
+	}
+	*GPIO_PA_DOUT &= ~(PA_ALLOW_MASK << 8); // Shift bits one byte to the left, because only the upper byte is used
+	*GPIO_PA_DOUT |= ((PA_ALLOW_MASK & leds) << 8);
 	return 0;
 }
 
@@ -108,7 +150,8 @@ static struct file_operations my_fops = {
 .read = my_read,
 .write = my_write,
 .open = my_open,
-.release = my_release
+.release = my_release,
+.fasync = fasync
 };
 
 static int __init template_init(void)
