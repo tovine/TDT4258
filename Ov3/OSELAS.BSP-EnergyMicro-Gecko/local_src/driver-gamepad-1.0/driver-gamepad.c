@@ -9,6 +9,7 @@
 #include <linux/cdev.h>
 #include <linux/device.h>
 #include <linux/interrupt.h>
+#include <linux/signal.h>
 //#include <linux/sched.h>?
 #include <asm/uaccess.h>
 
@@ -17,7 +18,7 @@
 #include "efm32gg.h"
 
 #define CLASS_NAME	"TDT4258_inputdev"
-#define PA_ALLOW_MASK	0x70 // 0b01110000 - used to mask out the LED pins on PORT_A we can actually use
+#define PA_ALLOW_MASK	0x7000 // 0b01110000 00000000 - used to mask out the LED pins on PORT_A we can actually use
 #define IRQ_GPIO_EVEN	17
 #define IRQ_GPIO_ODD	18
 
@@ -26,7 +27,7 @@ struct cdev my_cdev;
 struct class *cl;
 char DEV_NAME[] = "gamepad";
 struct fasync_struct* async;
-char buttoncache = NULL;
+char buttoncache = 0, *bcache_ptr;
 
 /* function to set up GPIO mode and interrupts*/
 int setupGPIO(void)
@@ -44,6 +45,7 @@ int setupGPIO(void)
 //  *CMU_HFPERCLKEN0 |= CMU2_HFPERCLKEN0_GPIO; /* enable GPIO clock*/ - Not needed as the kernel does this
 	*GPIO_PA_CTRL = 2;  /* set high drive strength */
 	*GPIO_PA_MODEH |= 0x05550000; /* set pins A12-14 as output, rest should not be touched (registers are 0 by default, so OR-equals will work) */
+	*GPIO_PA_DOUT |= PA_ALLOW_MASK; // LEDs should be off by default
 
 	*GPIO_PC_MODEL = 0x33333333; /*set pins  C0-7 as input with filter */
 	*GPIO_PC_DOUT = 0xFF; /* pull up direction up*/
@@ -64,7 +66,8 @@ static irq_handler_t button_handler(int irq, void *dev_id, struct pt_regs *regs)
 	if(async) {
 		//TODO: implement asynchronous notification
 		buttoncache = ~*GPIO_PC_DIN;		// Cache the current button state
-		kill_fasync(async, SIGIO, POLL_IN);	// Notify the other applications that something happened
+		bcache_ptr = &buttoncache;
+		kill_fasync(&async, SIGIO, POLL_IN);	// Notify the other applications that something happened
 	}
 	printk(KERN_INFO "Value of keys pressed %d", keys);
 	return (irq_handler_t) IRQ_HANDLED;
@@ -100,9 +103,9 @@ static ssize_t my_read(struct file *filp, char __user *buff, size_t count, loff_
 	unsigned int bytes_read = 0;
 
 	uint8_t keys = ~*GPIO_PC_DIN;
-	if(buttoncache != NULL) { // Button read after interrupt should be buffered
+	if(bcache_ptr != NULL) { // Button read after interrupt should be buffered
 		keys = buttoncache;
-		buttoncache = NULL;
+		bcache_ptr = NULL;
 	}
 	printk(KERN_INFO "Status of buttons: %d", keys);
 	put_user((char) keys, buff);
@@ -111,38 +114,43 @@ static ssize_t my_read(struct file *filp, char __user *buff, size_t count, loff_
 /* user program writes to the driver */
 static ssize_t my_write(struct file *filp, const char __user *buff, size_t count, loff_t *offp) {
 	//TODO - this should light the LEDs
-	printk(KERN_INFO "Received data: %s", buff);
-	char *data;
-	copy_from_user(data, buff);
-	uint8_t leds = 0;
-	switch(data[0]){
+	printk(KERN_INFO "Received data: %d\n", *buff);
+	uint8_t leds = 0b01110000; // Default: all LEDs off (output low -> LED on)
+	switch(buff[0]){ // Input is translated to binary numbers [0-7] and displayed on the three available LEDs
+		case 1:
 		case '1':
-			leds = 0b00010000;
+			leds = 0b00110000; //0b01000000; //0b00010000;
 			break;
+		case 2:
 		case '2':
-			leds = 0b00100000;
+			leds = 0b01010000; //0b00100000; //0b00100000;
 			break;
+		case 3:
 		case '3':
-			leds = 0b00110000;
+			leds = 0b00010000; //0b01100000; //0b00110000;
 			break;
+		case 4:
 		case '4':
-			leds = 0b01000000;
+			leds = 0b01100000; //0b00010000; //0b01000000;
 			break;
+		case 5:
 		case '5':
-			leds = 0b01010000;
+			leds = 0b00100000; //0b01010000; //0b01010000;
 			break;
+		case 6:
 		case '6':
-			leds = 0b01100000;
+			leds = 0b01000000; //0b00110000; //0b01100000;
 			break;
+		case 7:
 		case '7':
-			leds = 0b01110000;
+			leds = 0b00000000; //0b01110000;
 			break;
 		default:
-			printk(KERN_INFO "Invalid input, supported range: 0-7");
+			printk(KERN_INFO "Invalid input - supported range: 0-7, got %d (char: %c)", buff[0], buff[0]);
 	}
-	*GPIO_PA_DOUT &= ~(PA_ALLOW_MASK << 8); // Shift bits one byte to the left, because only the upper byte is used
-	*GPIO_PA_DOUT |= ((PA_ALLOW_MASK & leds) << 8);
-	return 0;
+	*GPIO_PA_DOUT &= ~(PA_ALLOW_MASK );
+	*GPIO_PA_DOUT |= (PA_ALLOW_MASK & (leds << 8)); // Shift bits one byte to the left, because only the upper byte is used
+	return count;
 }
 
 static struct file_operations my_fops = {
@@ -167,8 +175,8 @@ static int __init template_init(void)
 	device_create(cl, NULL, DEV_ID, NULL, CLASS_NAME);
 
 	// Register IRQ handlers - use the same function as we don't differentiate between even and odd buttons
-	if(request_irq(IRQ_GPIO_ODD, button_handler, 0, DEV_NAME, NULL) != 0) goto fail_requestIRQ1;
-	if(request_irq(IRQ_GPIO_EVEN, button_handler, 0, DEV_NAME, NULL) != 0) goto fail_requestIRQ2;
+	if(request_irq(IRQ_GPIO_ODD, (irq_handler_t) button_handler, 0, DEV_NAME, NULL) != 0) goto fail_requestIRQ1;
+	if(request_irq(IRQ_GPIO_EVEN, (irq_handler_t) button_handler, 0, DEV_NAME, NULL) != 0) goto fail_requestIRQ2;
 
 	//TODO:do this better (error handling sequence)
 	switch (setupGPIO()) { // < 0 means error, cleanup and exit
