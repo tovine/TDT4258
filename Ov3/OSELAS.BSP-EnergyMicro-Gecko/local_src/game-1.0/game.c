@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <linux/fb.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
@@ -12,7 +13,7 @@
 #define SCR_HEIGHT 240
 #define SCR_BPP 2  //16 bits per pixel (in bytes)
 struct fb_copyarea display;
-int fbfd = 0; // File descriptor id for framebuffer
+int fbfd = 0, gpfd = 0; // File descriptor ids for framebuffer and gamepad
 
 typedef union {
 	struct {
@@ -54,9 +55,21 @@ void flush_framebuffer() {
 	ioctl(fbfd, 0x4680, &display); //command driver to update display
 }
 
+// Interrupt signal handler to respond to keypresses
+void keypress_handler(int signal) {
+	printf("Keypress detected, reading input file...\n");
+	char input_buff;
+	if(read(gpfd, &input_buff, 1) == 1) { // Read exactly one byte
+		// Read was successful
+		printf("Successfully read the input, data: %d", input_buff);
+	}
+}
+
 int main(int argc, char *argv[])
 {
 	printf("Hello World, I'm game!\n");
+
+	// Init display driver
 	display.dx = 0;
 	display.dy = 0;
 	display.width = SCR_WIDTH;
@@ -64,18 +77,50 @@ int main(int argc, char *argv[])
 	fbfd = open("/dev/fb0", O_RDWR);
 	if(fbfd == -1) {
 		// Failed to open file descriptor
-		printf("Error: unable to open framebuffer, exiting...)");
+		printf("Error: unable to open framebuffer, exiting...\n)");
 		exit(EXIT_FAILURE);
 	}
 	int screensize = SCR_WIDTH * SCR_HEIGHT * SCR_BPP; 	
 	framebuffer = (uint16_t*) mmap(NULL,screensize,PROT_READ |PROT_WRITE, MAP_SHARED, fbfd, 0);
 	if(framebuffer == MAP_FAILED) { // Error, return
-		printf("Error: unable to map framebuffer (%d), exiting...", framebuffer);
+		printf("Error: unable to map framebuffer, exiting...\n");
 		close(fbfd);
 		exit(EXIT_FAILURE);
 	}
 
-	// TODO: draw something fancy for demonstration
+	// Open gamepad device driver
+	gpfd = open("/dev/gamepad", O_RDWR);
+	if(gpfd == -1) {
+		// Failed to open file descriptor
+		printf("Error: unable to open gamepad device, exiting...\n)");
+		close(fbfd);
+		exit(EXIT_FAILURE);
+	}
+	if(signal(SIGIO, &keypress_handler) == SIG_ERR) {
+		printf("Error: failed to create signal handler\n");
+		// TODO: cleanup and exit
+		close(fbfd);
+		close(gpfd);
+		exit(EXIT_FAILURE);
+	}
+	// Set correct ownership
+	if(fcntl(gpfd, F_SETOWN, getpid()) == -1) {
+		printf("Error: failed to set owner of gamepad device\n");
+		// TODO: cleanup and exit
+		close(fbfd);
+		close(gpfd);
+		exit(EXIT_FAILURE);
+	}
+	// Set ASYNC flag to be able to receive notifications
+	long flags = fcntl(gpfd, F_GETFL);
+	if(fcntl(gpfd, F_SETFL, flags | FASYNC) == -1) {
+		printf("Error: failed to set FASYNC flag\n");
+		// TODO: cleanup and exit
+		close(fbfd);
+		close(gpfd);
+		exit(EXIT_FAILURE);
+	}
+
 	int x = 0, y = 0;
 	for (x = 0;x < SCR_WIDTH;x++){
 		for (y = 0;y < SCR_HEIGHT;y++) {
@@ -84,8 +129,13 @@ int main(int argc, char *argv[])
 	}
 	flush_framebuffer();
 
+	while(1) {
+		// Loop and react to input
+	}
+
 	munmap(framebuffer,screensize); // Not really necessary, as it is automatically unmapped when the process exits
 	close(fbfd);
+	close(gpfd);
 	exit(EXIT_SUCCESS);
 
 }

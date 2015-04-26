@@ -17,7 +17,7 @@
 
 #include "efm32gg.h"
 
-#define CLASS_NAME	"TDT4258_inputdev"
+#define CLASS_NAME	"gamepad"
 #define PA_ALLOW_MASK	0x7000 // 0b01110000 00000000 - used to mask out the LED pins on PORT_A we can actually use
 #define IRQ_GPIO_EVEN	17
 #define IRQ_GPIO_ODD	18
@@ -92,6 +92,7 @@ static int my_open(struct inode *inode, struct file *filp) {
 /* user program closes the driver */
 static int my_release(struct inode *inode, struct file *filp) {
 	//TODO
+	printk(KERN_INFO "Device file closed");
 	return 0;
 }
 /* Asynchronous file operations */
@@ -113,7 +114,6 @@ static ssize_t my_read(struct file *filp, char __user *buff, size_t count, loff_
 }
 /* user program writes to the driver */
 static ssize_t my_write(struct file *filp, const char __user *buff, size_t count, loff_t *offp) {
-	//TODO - this should light the LEDs
 	printk(KERN_INFO "Received data: %d\n", *buff);
 	uint8_t leds = 0b01110000; // Default: all LEDs off (output low -> LED on)
 	switch(buff[0]){ // Input is translated to binary numbers [0-7] and displayed on the three available LEDs
