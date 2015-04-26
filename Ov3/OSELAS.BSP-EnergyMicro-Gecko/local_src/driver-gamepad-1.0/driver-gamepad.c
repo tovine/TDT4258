@@ -59,17 +59,17 @@ int setupGPIO(void)
 }
 
 static irq_handler_t button_handler(int irq, void *dev_id, struct pt_regs *regs) {
+	uint8_t keys;
 	// Clear interrupt flags, so they don't fire again
 	*GPIO_IFC= 0xff;
-
-	uint8_t keys = ~*GPIO_PC_DIN;
+	keys= ~*GPIO_PC_DIN;
 	if(async) {
 		//TODO: implement asynchronous notification
 		buttoncache = ~*GPIO_PC_DIN;		// Cache the current button state
 		bcache_ptr = &buttoncache;
 		kill_fasync(&async, SIGIO, POLL_IN);	// Notify the other applications that something happened
 	}
-	printk(KERN_INFO "Value of keys pressed %d", keys);
+	//printk(KERN_INFO "Value of keys pressed %d", keys);
 	return (irq_handler_t) IRQ_HANDLED;
 }
 
@@ -101,21 +101,20 @@ static int fasync(int inode_num, struct file *filp, int mode) {
 }
 /* user program reads from the driver */
 static ssize_t my_read(struct file *filp, char __user *buff, size_t count, loff_t *offp) {
-	unsigned int bytes_read = 0;
-
-	uint8_t keys = ~*GPIO_PC_DIN;
+	uint8_t keys;
+	keys = ~*GPIO_PC_DIN;
 	if(bcache_ptr != NULL) { // Button read after interrupt should be buffered
 		keys = buttoncache;
 		bcache_ptr = NULL;
 	}
-	printk(KERN_INFO "Status of buttons: %d", keys);
+//	printk(KERN_INFO "Status of buttons: %d", keys);
 	put_user((char) keys, buff);
 	return 0;
 }
 /* user program writes to the driver */
 static ssize_t my_write(struct file *filp, const char __user *buff, size_t count, loff_t *offp) {
-	printk(KERN_INFO "Received data: %d\n", *buff);
 	uint8_t leds = 0b01110000; // Default: all LEDs off (output low -> LED on)
+	printk(KERN_INFO "Received data: %d\n", *buff);
 	switch(buff[0]){ // Input is translated to binary numbers [0-7] and displayed on the three available LEDs
 		case 1:
 		case '1':
@@ -185,7 +184,7 @@ static int __init template_init(void)
 		case -2:
 			goto fail_gpio_alloc_1;
 		default:
-			printk(KERN_INFO "GPIO allocation OK");
+			printk(KERN_INFO "GPIO allocation OK\n");
 	}
 	// Finally, add the cdev - this has to be done after all initialization is done
 	if (cdev_add(&my_cdev, DEV_ID, 1) < 0) goto fail_cdev;
@@ -196,7 +195,7 @@ static int __init template_init(void)
 		release_mem_region(GPIO_PC_BASE, 0x068);
 	fail_gpio_alloc_1:
 		release_mem_region(GPIO_PA_BASE, 0x01C);
-		printk(KERN_ERR "Failed to request GPIO memory space");
+		printk(KERN_ERR "Failed to request GPIO memory space\n");
 		free_irq(IRQ_GPIO_EVEN, NULL);	
 	fail_requestIRQ2:
 		free_irq(IRQ_GPIO_ODD, NULL);	
@@ -222,7 +221,9 @@ static void __exit template_cleanup(void)
 	// Release memory
 	release_mem_region(GPIO_PA_BASE, 0x01C);
 	release_mem_region(GPIO_PC_BASE, 0x068);
-
+	free_irq(IRQ_GPIO_EVEN, NULL);	
+	free_irq(IRQ_GPIO_ODD, NULL);	
+	cdev_del(&my_cdev);
 	unregister_chrdev_region(DEV_ID, 1);
 	printk("Short life for a small module...\n");
 }

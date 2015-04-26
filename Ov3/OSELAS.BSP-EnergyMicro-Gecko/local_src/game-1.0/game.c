@@ -14,6 +14,7 @@
 #define SCR_BPP 2  //16 bits per pixel (in bytes)
 struct fb_copyarea display;
 int fbfd = 0, gpfd = 0; // File descriptor ids for framebuffer and gamepad
+int quit = 0;
 
 typedef union {
 	struct {
@@ -55,13 +56,24 @@ void flush_framebuffer() {
 	ioctl(fbfd, 0x4680, &display); //command driver to update display
 }
 
+// Cleanup function that can be used to exit from anywhere in the code
+void exit_clean(void) {
+	close(fbfd);
+	close(gpfd);
+	exit(EXIT_SUCCESS);
+}
+
 // Interrupt signal handler to respond to keypresses
 void keypress_handler(int signal) {
 	printf("Keypress detected, reading input file...\n");
 	char input_buff;
-	if(read(gpfd, &input_buff, 1) == 1) { // Read exactly one byte
+	if(read(gpfd, &input_buff, 1) != -1) { // Read exactly one byte
 		// Read was successful
-		printf("Successfully read the input, data: %d", input_buff);
+		printf("Successfully read the input, data: %d\n", input_buff);
+		//decode_input(input_buf); // TODO:write function
+		if(input_buff > 127) exit_clean();
+	} else{
+		printf("Failed to read input, contents of input_buff: %d\n", input_buff);
 	}
 }
 
@@ -129,13 +141,13 @@ int main(int argc, char *argv[])
 	}
 	flush_framebuffer();
 
-	while(1) {
+	while(quit != 1) {
 		// Loop and react to input
 	}
 
 	munmap(framebuffer,screensize); // Not really necessary, as it is automatically unmapped when the process exits
-	close(fbfd);
-	close(gpfd);
-	exit(EXIT_SUCCESS);
 
+	exit_clean();
+
+	return 0; // Just to make the compiler happy, as main() must return int - even though it will never reach this far...
 }
