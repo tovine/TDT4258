@@ -86,13 +86,13 @@ static irq_handler_t button_handler(int irq, void *dev_id, struct pt_regs *regs)
 static int my_open(struct inode *inode, struct file *filp) {
 	nonseekable_open(inode, filp); // Device is not seekable
 	//TODO
-	printk(KERN_INFO "Device file opened");
+	printk(KERN_INFO "Device file opened\n");
 	return 0;
 }
 /* user program closes the driver */
 static int my_release(struct inode *inode, struct file *filp) {
 	//TODO
-	printk(KERN_INFO "Device file closed");
+	printk(KERN_INFO "Device file closed\n");
 	return 0;
 }
 /* Asynchronous file operations */
