@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -78,9 +79,8 @@ enum direction {
 };
 
 typedef struct {
-	uint8_t length, lives;
+	uint8_t length, id;
 	Coord pos[MAX_LENGTH];
-	Coord *head, *tail;
 	Color color;
 	enum direction dir;
 } Snake;
@@ -182,7 +182,12 @@ void snake_move(Snake *snake, enum direction dir) {
 	}
 	if(!pos_ok(tmp_pos)) {
 		// Snake either bit itself or hit the edges - you lost...
-		printf("Ouch - you lost..."); // TODO: modify for 2-player
+		printf("Ouch - you lost, player %d...\n", snake->id);
+		memset(framebuffer, 0, SCR_WIDTH * SCR_HEIGHT * SCR_BPP); // Fill screen with black
+		for(i = 0;i < snake->length;i++) {
+			draw_block(snake->pos[i].x, snake->pos[i].y, snake->color);
+		}
+		flush_framebuffer();
 		exit_clean();
 	}
 
@@ -197,7 +202,12 @@ void snake_move(Snake *snake, enum direction dir) {
 		snake->length++;
 		if(snake->length >= MAX_LENGTH) {
 			// You win!
-			printf("Max length reached - you win!");
+			printf("Max length reached - Player %d wins!\n", snake->id);
+			memset(framebuffer, 0xFFFF, SCR_WIDTH * SCR_HEIGHT * SCR_BPP); // Fill screen with white
+			for (i = 0;i < snake->length;i++){
+				draw_block(snake->pos[i].x, snake->pos[i].y, snake->color);
+			}
+			flush_framebuffer();
 			exit_clean();
 		}
 		// Place a new fruit
@@ -207,34 +217,40 @@ void snake_move(Snake *snake, enum direction dir) {
 		draw_block(snake->pos[snake->length].x, snake->pos[snake->length].y, col_bg);
 	}
 	draw_block(tmp_pos.x, tmp_pos.y, snake->color);
-	flush_framebuffer();
+//	flush_framebuffer(); Defer framebuffer update until both snakes have been updated
 }
 
 void game_start() {
 	// Init snake 1
+	snake1.id = 1;
 	snake1.length = 1;
-	snake1.lives = 3;
+//	snake1.lives = 3; - not used yet
 	snake1.dir = NONE;
 	snake1.pos[0].x = BLOCKS_X / 3;
 	snake1.pos[0].y = BLOCKS_Y / 3;
 	snake1.color = color(31,0,0);
 	// Init snake 2
+	snake2.id = 2;
 	snake2.length = 1;
-	snake2.lives = 3;
+//	snake2.lives = 3; - not used yet
 	snake2.dir = NONE;
 	snake2.pos[0].x = BLOCKS_X*2 / 3;
 	snake2.pos[0].y = BLOCKS_Y*2 / 3;
 	snake2.color = color(0,0,31);
 	
 	dot.color = color(0,63,0);
-	// TODO: clear screen?
 	int x = 0, y = 0;
 	for (x = 0;x < SCR_WIDTH;x++){
 		for (y = 0;y < SCR_HEIGHT;y++) {
 			draw_pixel(x,y, color(x % 32, (x+y) % 64, y % 32));
 		}
 	}
-
+	for(x = -1;x <= 1; x++) {
+		for(y = -1;y <= 1; y++) {
+			draw_block(snake1.pos[0].x + x, snake1.pos[0].y + y, col_bg);
+			draw_block(snake2.pos[0].x + x, snake2.pos[0].y + y, col_bg);
+		}
+	}
 	draw_block(snake1.pos[0].x, snake1.pos[0].y, snake1.color);
 	draw_block(snake2.pos[0].x, snake2.pos[0].y, snake2.color);
 
@@ -244,41 +260,50 @@ void game_start() {
 
 // Interrupt signal handler to respond to keypresses
 void keypress_handler(int signal) {
-	printf("Keypress detected, reading input file...\n");
-	char input_buff;
+//	printf("Keypress detected, reading input file...\n"); - debug spam
+	char input_buff, filtered_1, filtered_2;
 	if(read(gpfd, &input_buff, 1) != -1) { // Read exactly one byte
 		// Read was successful
-		printf("Successfully read the input, data: %d\n", input_buff);
-		// TODO: implement filtering to smoothly handle two presses at once
-		switch(input_buff) {
+//		printf("Successfully read the input, data: %d\n", input_buff); - debug spam
+		// Filter input to let two players press buttons at once
+		filtered_1 = input_buff & 0x0F;
+		filtered_2 = input_buff & 0xF0;
+		switch(filtered_1) {
 			case 1:
 				snake_move(&snake1, LEFT);
-				break;
-			case 16:
-				snake_move(&snake2, LEFT);
 				break;
 			case 2:
 				snake_move(&snake1, UP);
 				break;
-			case 32:
-				snake_move(&snake2, UP);
-				break;
 			case 4:
 				snake_move(&snake1, RIGHT);
 				break;
-			case 64:
-				snake_move(&snake2, RIGHT);
-				break;
 			case 8:
 				snake_move(&snake1, DOWN);
+				break;
+			default:
+				snake_move(&snake1, NONE);
+		}
+		switch(filtered_2) {
+			case 16:
+				snake_move(&snake2, LEFT);
+				break;
+			case 32:
+				snake_move(&snake2, UP);
+				break;
+			case 64:
+				snake_move(&snake2, RIGHT);
 				break;
 			case 128:
 				snake_move(&snake2, DOWN);
 				break;
 			default:
-				snake_move(&snake1, NONE);
+				snake_move(&snake2, NONE);
 		}
-		if(input_buff > 223) exit_clean(); // Press three rightmost buttons to terminate game
+		// Flush framebuffer after all updates have been made, and only if something actually was updated
+		if(input_buff) flush_framebuffer();
+		// Press three rightmost buttons to terminate game
+		if(input_buff > 223) exit_clean();
 	} else{
 		printf("Failed to read input, contents of input_buff: %d\n", input_buff);
 	}
@@ -292,8 +317,6 @@ void exit_error() {
 
 int main(int argc, char *argv[])
 {
-	printf("Hello World, I'm game!\n");
-
 	// Init display driver
 	display.dx = 0;
 	display.dy = 0;
@@ -338,6 +361,8 @@ int main(int argc, char *argv[])
 	}
 
 	col_bg = color(0,0,0);
+
+	printf("Hello, welcome to 2-player Snake Deathmatch!\nNormally you just control the snake around to pick up food, but this time it gets serious...\nPlayer 1 uses the 4 left buttons, and player 2 has the ones to the right.\nThere is no auto-move here, so you have to mash those buttons if you want to get somewhere.\nFirst player to eat %d dots wins, crash and you will die - good luck!\n", MAX_LENGTH);
 
 	game_start();
 	while(1) {
