@@ -5,43 +5,62 @@
 #define GPIO_PA_BASE 0x40006000
 #define GPIO_PB_BASE 0x40006024
 #define GPIO_PC_BASE 0x40006048
+#define GPIO_INT_BASE 0x40006100
 
-#define GPIO_PA_CTRL     ((volatile uint32_t*)(GPIO_PA_BASE + 0x00))
-#define GPIO_PA_MODEL    ((volatile uint32_t*)(GPIO_PA_BASE + 0x04))
-#define GPIO_PA_MODEH    ((volatile uint32_t*)(GPIO_PA_BASE + 0x08))
-#define GPIO_PA_DOUT     ((volatile uint32_t*)(GPIO_PA_BASE + 0x0c))
-#define GPIO_PA_DOUTSET  ((volatile uint32_t*)(GPIO_PA_BASE + 0x10))
-#define GPIO_PA_DOUTCLR  ((volatile uint32_t*)(GPIO_PA_BASE + 0x14))
-#define GPIO_PA_DOUTTGL  ((volatile uint32_t*)(GPIO_PA_BASE + 0x18))
-#define GPIO_PA_DIN      ((volatile uint32_t*)(GPIO_PA_BASE + 0x1c))
-#define GPIO_PA_PINLOCKN ((volatile uint32_t*)(GPIO_PA_BASE + 0x20))
 
-#define GPIO_PB_CTRL     ((volatile uint32_t*)(GPIO_PB_BASE + 0x00))
-#define GPIO_PB_MODEL    ((volatile uint32_t*)(GPIO_PB_BASE + 0x04))
-#define GPIO_PB_MODEH    ((volatile uint32_t*)(GPIO_PB_BASE + 0x08))
-#define GPIO_PB_DOUT     ((volatile uint32_t*)(GPIO_PB_BASE + 0x0c))
-#define GPIO_PB_DOUTSET  ((volatile uint32_t*)(GPIO_PB_BASE + 0x10))
-#define GPIO_PB_DOUTCLR  ((volatile uint32_t*)(GPIO_PB_BASE + 0x14))
-#define GPIO_PB_DOUTTGL  ((volatile uint32_t*)(GPIO_PB_BASE + 0x18))
-#define GPIO_PB_DIN      ((volatile uint32_t*)(GPIO_PB_BASE + 0x1c))
-#define GPIO_PB_PINLOCKN ((volatile uint32_t*)(GPIO_PB_BASE + 0x20))
+#define CTRL_OFFSET 0x00
+#define MODEL_OFFSET 0x04
+#define MODEH_OFFSET 0x08
+#define DOUT_OFFSET 0x0c
+#define DOUTSET_OFFSET 0x10
+#define DOUTCLR_OFFSET 0x14
+#define DOUTTGL_OFFSET 0x18
+#define DIN_OFFSET 0x1c
+#define PINLOCKN_OFFSET 0x20
 
-#define GPIO_PC_CTRL     ((volatile uint32_t*)(GPIO_PC_BASE + 0x00))
-#define GPIO_PC_MODEL    ((volatile uint32_t*)(GPIO_PC_BASE + 0x04))
-#define GPIO_PC_MODEH    ((volatile uint32_t*)(GPIO_PC_BASE + 0x08))
-#define GPIO_PC_DOUT     ((volatile uint32_t*)(GPIO_PC_BASE + 0x0c))
-#define GPIO_PC_DOUTSET  ((volatile uint32_t*)(GPIO_PC_BASE + 0x10))
-#define GPIO_PC_DOUTCLR  ((volatile uint32_t*)(GPIO_PC_BASE + 0x14))
-#define GPIO_PC_DOUTTGL  ((volatile uint32_t*)(GPIO_PC_BASE + 0x18))
-#define GPIO_PC_DIN      ((volatile uint32_t*)(GPIO_PC_BASE + 0x1c))
-#define GPIO_PC_PINLOCKN ((volatile uint32_t*)(GPIO_PC_BASE + 0x20))
+#define GPIO_PA_CTRL     ((volatile uint32_t*)(GPIO_PA_BASE + CTRL_OFFSET))
+#define GPIO_PA_MODEL    ((volatile uint32_t*)(GPIO_PA_BASE + MODEL_OFFSET))
+#define GPIO_PA_MODEH    ((volatile uint32_t*)(GPIO_PA_BASE + MODEH_OFFSET))
+#define GPIO_PA_DOUT     ((volatile uint32_t*)(GPIO_PA_BASE + DOUT_OFFSET))
+#define GPIO_PA_DOUTSET  ((volatile uint32_t*)(GPIO_PA_BASE + DOUTSET_OFFSET))
+#define GPIO_PA_DOUTCLR  ((volatile uint32_t*)(GPIO_PA_BASE + DOUTCLR_OFFSET))
+#define GPIO_PA_DOUTTGL  ((volatile uint32_t*)(GPIO_PA_BASE + DOUTGL_OFFSET))
+#define GPIO_PA_DIN      ((volatile uint32_t*)(GPIO_PA_BASE + DIN_OFFSET))
+#define GPIO_PA_PINLOCKN ((volatile uint32_t*)(GPIO_PA_BASE + PINLOCKN_OFFSET))
 
-#define GPIO_EXTIPSELL ((volatile uint32_t*)(GPIO_PA_BASE + 0x100))
-#define GPIO_EXTIPSELH ((volatile uint32_t*)(GPIO_PA_BASE + 0x104))
-#define GPIO_EXTIRISE  ((volatile uint32_t*)(GPIO_PA_BASE + 0x108))
-#define GPIO_EXTIFALL  ((volatile uint32_t*)(GPIO_PA_BASE + 0x10c))
-#define GPIO_IEN       ((volatile uint32_t*)(GPIO_PA_BASE + 0x110))
-#define GPIO_IFC       ((volatile uint32_t*)(GPIO_PA_BASE + 0x11c))
+#define GPIO_PB_CTRL     ((volatile uint32_t*)(GPIO_PB_BASE + CTRL_OFFSET))
+#define GPIO_PB_MODEL    ((volatile uint32_t*)(GPIO_PB_BASE + MODEL_OFFSET))
+#define GPIO_PB_MODEH    ((volatile uint32_t*)(GPIO_PB_BASE + MODEH_OFFSET))
+#define GPIO_PB_DOUT     ((volatile uint32_t*)(GPIO_PB_BASE + DOUT_OFFSET))
+#define GPIO_PB_DOUTSET  ((volatile uint32_t*)(GPIO_PB_BASE + DOUTSET_OFFSET))
+#define GPIO_PB_DOUTCLR  ((volatile uint32_t*)(GPIO_PB_BASE + DOUTCLR_OFFSET))
+#define GPIO_PB_DOUTTGL  ((volatile uint32_t*)(GPIO_PB_BASE + DOUTGL_OFFSET))
+#define GPIO_PB_DIN      ((volatile uint32_t*)(GPIO_PB_BASE + DIN_OFFSET))
+#define GPIO_PB_PINLOCKN ((volatile uint32_t*)(GPIO_PB_BASE + PINLOCKN_OFFSET))
+
+#define GPIO_PC_CTRL     ((volatile uint32_t*)(GPIO_PC_BASE + CTRL_OFFSET))
+#define GPIO_PC_MODEL    ((volatile uint32_t*)(GPIO_PC_BASE + MODEL_OFFSET))
+#define GPIO_PC_MODEH    ((volatile uint32_t*)(GPIO_PC_BASE + MODEH_OFFSET))
+#define GPIO_PC_DOUT     ((volatile uint32_t*)(GPIO_PC_BASE + DOUT_OFFSET))
+#define GPIO_PC_DOUTSET  ((volatile uint32_t*)(GPIO_PC_BASE + DOUTSET_OFFSET))
+#define GPIO_PC_DOUTCLR  ((volatile uint32_t*)(GPIO_PC_BASE + DOUTCLR_OFFSET))
+#define GPIO_PC_DOUTTGL  ((volatile uint32_t*)(GPIO_PC_BASE + DOUTGL_OFFSET))
+#define GPIO_PC_DIN      ((volatile uint32_t*)(GPIO_PC_BASE + DIN_OFFSET))
+#define GPIO_PC_PINLOCKN ((volatile uint32_t*)(GPIO_PC_BASE + PINLOCKN_OFFSET))
+
+#define EXTIPSELL_OFFSET 0x00
+#define EXTIPSELH_OFFSET 0x04
+#define EXTIRISE_OFFSET 0x08
+#define EXTIFALL_OFFSET 0x0c
+#define IEN_OFFSET 0x10
+#define IFC_OFFSET 0x1c
+
+#define GPIO_EXTIPSELL ((volatile uint32_t*)(GPIO_INT_BASE + EXTIPSELL_OFFSET))
+#define GPIO_EXTIPSELH ((volatile uint32_t*)(GPIO_INT_BASE + EXTIPSELH_OFFSET))
+#define GPIO_EXTIRISE  ((volatile uint32_t*)(GPIO_INT_BASE + EXTIRISE_OFFSET))
+#define GPIO_EXTIFALL  ((volatile uint32_t*)(GPIO_INT_BASE + EXTIFALL_OFFSET))
+#define GPIO_IEN       ((volatile uint32_t*)(GPIO_INT_BASE + IEN_OFFSET))
+#define GPIO_IFC       ((volatile uint32_t*)(GPIO_INT_BASE + IFC_OFFSET))
 
 // CMU
 
@@ -95,15 +114,15 @@
 
 #define EMU_BASE2 0x400c6000
 
-#define EMU_CTRL ((volatile uint32_t*)(EMU_BASE2 + 0x000))
+#define EMU_CTRL ((volatile uint32_t*)(EMU_BASE2 + CTRL_OFFSET0))
 
 // DAC0
 
 #define DAC0_BASE2 0x40004000
 
-#define DAC0_CTRL     ((volatile uint32_t*)(DAC0_BASE2 + 0x000))
-#define DAC0_CH0CTRL  ((volatile uint32_t*)(DAC0_BASE2 + 0x008))
-#define DAC0_CH1CTRL  ((volatile uint32_t*)(DAC0_BASE2 + 0x00c))
+#define DAC0_CTRL     ((volatile uint32_t*)(DAC0_BASE2 + CTRL_OFFSET0))
+#define DAC0_CH0CTRL  ((volatile uint32_t*)(DAC0_BASE2 + CTRL_OFFSET8))
+#define DAC0_CH1CTRL  ((volatile uint32_t*)(DAC0_BASE2 + CTRL_OFFSETc))
 #define DAC0_IEN      ((volatile uint32_t*)(DAC0_BASE2 + 0x010))
 #define DAC0_IF       ((volatile uint32_t*)(DAC0_BASE2 + 0x014))
 #define DAC0_IFS      ((volatile uint32_t*)(DAC0_BASE2 + 0x018))
@@ -116,15 +135,15 @@
 
 #define DMA_BASE 0x400c2000
 
-#define DMA_STATUS      ((volatile uint32_t*)(DMA_BASE + 0x0000))
-#define DMA_CONFIG      ((volatile uint32_t*)(DMA_BASE + 0x0004))
-#define DMA_CTRLBASE    ((volatile uint32_t*)(DMA_BASE + 0x0008))
-#define DMA_ALTCTRLBASE ((volatile uint32_t*)(DMA_BASE + 0x000c))
-#define DMA_CHUSEBURSTS ((volatile uint32_t*)(DMA_BASE + 0x0018))
-#define DMA_CHUSEBURSTC ((volatile uint32_t*)(DMA_BASE + 0x001c))
-#define DMA_REQMASKC    ((volatile uint32_t*)(DMA_BASE + 0x0024))
-#define DMA_CHENS       ((volatile uint32_t*)(DMA_BASE + 0x0028))
-#define DMA_CHALTC      ((volatile uint32_t*)(DMA_BASE + 0x0034))
+#define DMA_STATUS      ((volatile uint32_t*)(DMA_BASE + CTRL_OFFSET00))
+#define DMA_CONFIG      ((volatile uint32_t*)(DMA_BASE + CTRL_OFFSET04))
+#define DMA_CTRLBASE    ((volatile uint32_t*)(DMA_BASE + CTRL_OFFSET08))
+#define DMA_ALTCTRLBASE ((volatile uint32_t*)(DMA_BASE + CTRL_OFFSET0c))
+#define DMA_CHUSEBURSTS ((volatile uint32_t*)(DMA_BASE + CTRL_OFFSET18))
+#define DMA_CHUSEBURSTC ((volatile uint32_t*)(DMA_BASE + CTRL_OFFSET1c))
+#define DMA_REQMASKC    ((volatile uint32_t*)(DMA_BASE + CTRL_OFFSET24))
+#define DMA_CHENS       ((volatile uint32_t*)(DMA_BASE + CTRL_OFFSET28))
+#define DMA_CHALTC      ((volatile uint32_t*)(DMA_BASE + CTRL_OFFSET34))
 #define DMA_IFC         ((volatile uint32_t*)(DMA_BASE + 0x1008))
 #define DMA_IEN         ((volatile uint32_t*)(DMA_BASE + 0x100c))
 #define DMA_CH0_CTRL    ((volatile uint32_t*)(DMA_BASE + 0x1100))
@@ -140,4 +159,5 @@
 #define SCR          ((volatile uint32_t*)0xe000ed10)
 #define SYSTICK_CTRL ((volatile uint32_t*)0xe000e010)
 #define SYSTICK_LOAD ((volatile uint32_t*)0xe000e014)
+
 
